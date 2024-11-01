@@ -58,11 +58,11 @@ jobs:
     #       echo "Triggering deployment of the model..."
     #       # You can add the script or commands to deploy your model here
 
-      - name: Archive artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: model-artifacts
-          path: '**.pkl'
+    #   - name: Archive artifacts
+    #     uses: actions/upload-artifact@v2
+    #     with:
+    #       name: model-artifacts
+    #       path: '**.pkl'
 
       - name: Finish
         run: echo "Pipeline execution complete."
