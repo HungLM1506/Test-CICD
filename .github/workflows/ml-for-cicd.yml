@@ -56,5 +56,5 @@ jobs:
         run: echo "Pipeline execution complete."
       - name: Notify server 
         run: |
-          curl -X POST http://172.31.21.228:5000/webhook
+          curl -X POST http://0.0.0.0:5000/webhook
 
