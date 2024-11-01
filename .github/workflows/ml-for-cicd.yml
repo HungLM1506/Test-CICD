@@ -67,7 +67,7 @@
 #         run: echo "Pipeline execution complete."
 
 
-name: CI/CD for ML Project with Docker
+name: CI/CD for ML Project
 
 on:
   push:
@@ -84,13 +84,6 @@ jobs:
     steps:
       - name: Check out the repository
         uses: actions/checkout@v2
-
-      - name: Set up Docker
-        run: |
-          sudo apt-get update
-          sudo apt-get remove -y docker docker-engine docker.io containerd runc
-          sudo apt-get install -y docker.io
-
 
       - name: Build Docker Image
         run: |
@@ -126,12 +119,6 @@ jobs:
       - name: Tear Down Serving Container
         if: always()
         run: docker stop ml_serve
-
-      # - name: Archive Artifacts
-      #   uses: actions/upload-artifact@v2
-      #   with:
-      #     name: model-artifacts
-      #     path: '**/*.pkl'
 
       - name: Finish
         run: echo "Pipeline execution complete."
