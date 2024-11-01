@@ -39,13 +39,13 @@ jobs:
 
       - name: Serve model
         run: |
-          Start-Process python -ArgumentList "model_serving.py"
+          nohup python model_serving.py &
         env:
           PYTHONPATH: ${{ github.workspace }}
 
-    #   - name: Wait for server to start
-    #     run: |
-    #       timeout /t 10
+      - name: Wait for server to start
+        run: |
+          sleep 10
 
       - name: Test served model
         run: |
