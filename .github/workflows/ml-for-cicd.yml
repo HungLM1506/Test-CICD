@@ -10,7 +10,7 @@ on:
 
 jobs:
   ml_pipeline:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     steps:
       - name: Check out the repository
@@ -39,7 +39,7 @@ jobs:
 
       - name: Serve model
         run: |
-          Start-Process python -ArgumentList "model_serving.py"
+          start /B python model_serving.py
         env:
           PYTHONPATH: ${{ github.workspace }}
 
