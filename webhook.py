@@ -12,7 +12,9 @@ def webhook():
         # Chạy lệnh để pull code mới từ Git
         subprocess.call(['git', '-C', 'git@github.com:HungLM1506/Test-CICD.git', 'pull'])
         # Chạy lệnh docker-compose để khởi động lại dịch vụ
-        subprocess.call(['docker compose', '-C', 'git@github.com:HungLM1506/Test-CICD.git', 'up', '--build', '-d'])
+        subprocess.check_call(['python3', 'data_loading.py'])
+        subprocess.check_call(['python3', 'training.py'])
+
     return '', 200
 
 if __name__ == '__main__':
