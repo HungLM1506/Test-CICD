@@ -1,0 +1,39 @@
+name: ML CI/CD Pipeline
+
+on: # xác định sự kiện kích hoạt workflow
+  push: # khi có sự thay đổi (commit) vào nhanh main
+    branches:
+      - main
+  pull_request: # Khi có pull request đến nhánh main 
+    branches:
+      - main
+  
+jobs: # định nghĩa công việc sẽ thực hiện
+  build: # tên job, chạy trên môi trường ubuntu-latest
+    runs-on: ubuntu-latest # chỉ định môi trường mà job sẽ chạy có thể là window, ubuntu hay macos
+
+    steps:
+    - name: Checkout code # tên của bước 
+      uses: actions/checkout@v2 # thực hiện action. Lưu ý ở mỗi bước có thể thực hiện action hoặc 1 lệnh cụ thể
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.8'
+
+    - name : Setup CML tool
+      uses: iterative/setup-cml@v1
+
+    - name: Install dependencies 
+      run: pip install -r requirements.txt
+
+    - name: Train Model
+      run: |
+        python train.py
+        cat metrics.txt >> report.md
+        echo "![](./plot.png)" >> report.md
+        cml comment create  report.md
+
+
+    
+  
