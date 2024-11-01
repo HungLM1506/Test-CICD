@@ -1,4 +1,72 @@
-name: CI/CD for ML Project
+# name: CI/CD for ML Project
+
+# on:
+#   push:
+#     branches:
+#       - main
+#   pull_request:
+#     branches:
+#       - main
+
+# jobs:
+#   ml_pipeline:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - name: Check out the repository
+#         uses: actions/checkout@v2
+
+#       - name: Set up Python
+#         uses: actions/setup-python@v2
+#         with:
+#           python-version: '3.11'
+
+#       - name: Install dependencies
+#         run: |
+#           pip install -r requirements.txt
+
+#       - name: Load and preprocess data
+#         run: |
+#           python data_loading.py
+
+#       - name: Train model
+#         run: |
+#           python model_training.py
+
+#       - name: Evaluate model
+#         run: |
+#           python model_evaluation.py
+
+#       - name: Serve model
+#         run: |
+#           nohup python model_serving.py &
+
+#       - name: Wait for server to start
+#         run: |
+#           sleep 10
+
+#       - name: Test served model
+#         run: |
+#           curl -X POST "http://127.0.0.1:9000/predict" \
+#           -H "Content-Type: application/json" \
+#           -d "{\\"features\\": [13.2, 2.77, 2.51, 18.5, 103.0, 1.15, 2.61, 0.26, 1.46, 3.0, 1.05, 3.33, 820.0]}"
+
+#     #   - name: Deploy model
+#     #     run: |
+#     #       echo "Triggering deployment of the model..."
+#     #       # You can add the script or commands to deploy your model here
+
+#     #   - name: Archive artifacts
+#     #     uses: actions/upload-artifact@v2
+#     #     with:
+#     #       name: model-artifacts
+#     #       path: '**.pkl'
+
+#       - name: Finish
+#         run: echo "Pipeline execution complete."
+
+
+name: CI/CD for ML Project with Docker
 
 on:
   push:
@@ -16,53 +84,51 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@v2
 
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.11'
-
-      - name: Install dependencies
+      - name: Set up Docker
         run: |
-          pip install -r requirements.txt
+          sudo apt-get update
+          sudo apt-get install -y docker.io
 
-      - name: Load and preprocess data
+      - name: Build Docker Image
         run: |
-          python data_loading.py
+          docker build -t ml_project .
 
-      - name: Train model
+      - name: Load and Preprocess Data
         run: |
-          python model_training.py
+          docker run --rm ml_project python data_loading.py
 
-      - name: Evaluate model
+      - name: Train Model
         run: |
-          python model_evaluation.py
+          docker run --rm ml_project python model_training.py
 
-      - name: Serve model
+      - name: Evaluate Model
         run: |
-          nohup python model_serving.py &
+          docker run --rm ml_project python model_evaluation.py
+
+      - name: Serve Model
+        run: |
+          docker run -d --name ml_serve -p 9000:9000 ml_project
         env:
           PYTHONPATH: ${{ github.workspace }}
 
-      - name: Wait for server to start
-        run: |
-          sleep 10
+      - name: Wait for Server to Start
+        run: sleep 10
 
-      - name: Test served model
+      - name: Test Served Model
         run: |
           curl -X POST "http://127.0.0.1:9000/predict" \
           -H "Content-Type: application/json" \
-          -d "{\\"features\\": [13.2, 2.77, 2.51, 18.5, 103.0, 1.15, 2.61, 0.26, 1.46, 3.0, 1.05, 3.33, 820.0]}"
+          -d "{\"features\": [13.2, 2.77, 2.51, 18.5, 103.0, 1.15, 2.61, 0.26, 1.46, 3.0, 1.05, 3.33, 820.0]}"
 
-    #   - name: Deploy model
-    #     run: |
-    #       echo "Triggering deployment of the model..."
-    #       # You can add the script or commands to deploy your model here
+      - name: Tear Down Serving Container
+        if: always()
+        run: docker stop ml_serve
 
-    #   - name: Archive artifacts
-    #     uses: actions/upload-artifact@v2
-    #     with:
-    #       name: model-artifacts
-    #       path: '**.pkl'
+      # - name: Archive Artifacts
+      #   uses: actions/upload-artifact@v2
+      #   with:
+      #     name: model-artifacts
+      #     path: '**/*.pkl'
 
       - name: Finish
         run: echo "Pipeline execution complete."
