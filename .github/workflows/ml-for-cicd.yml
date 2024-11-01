@@ -40,6 +40,7 @@
 #       - name: Serve model
 #         run: |
 #           nohup python model_serving.py &
+#         env:
 
 #       - name: Wait for server to start
 #         run: |
@@ -87,7 +88,9 @@ jobs:
       - name: Set up Docker
         run: |
           sudo apt-get update
+          sudo apt-get remove -y docker docker-engine docker.io containerd runc
           sudo apt-get install -y docker.io
+
 
       - name: Build Docker Image
         run: |
