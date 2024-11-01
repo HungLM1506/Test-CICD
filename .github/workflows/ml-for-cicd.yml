@@ -1,39 +1,68 @@
-name: ML CI/CD Pipeline
+name: CI/CD for ML Project
 
-on: # xác định sự kiện kích hoạt workflow
-  push: # khi có sự thay đổi (commit) vào nhanh main
+on:
+  push:
     branches:
       - main
-  pull_request: # Khi có pull request đến nhánh main 
+  pull_request:
     branches:
       - main
-  
-jobs: # định nghĩa công việc sẽ thực hiện
-  build: # tên job, chạy trên môi trường ubuntu-latest
-    runs-on: ubuntu-latest # chỉ định môi trường mà job sẽ chạy có thể là window, ubuntu hay macos
+
+jobs:
+  ml_pipeline:
+    runs-on: windows-latest
 
     steps:
-    - name: Checkout code # tên của bước 
-      uses: actions/checkout@v2 # thực hiện action. Lưu ý ở mỗi bước có thể thực hiện action hoặc 1 lệnh cụ thể
+      - name: Check out the repository
+        uses: actions/checkout@v2
 
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.8'
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.11'
 
-    - name : Setup CML tool
-      uses: iterative/setup-cml@v1
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
 
-    - name: Install dependencies 
-      run: pip install -r requirements.txt
+      - name: Load and preprocess data
+        run: |
+          python data_loading.py
 
-    - name: Train Model
-      run: |
-        python train.py
-        cat metrics.txt >> report.md
-        echo "![](./plot.png)" >> report.md
-        cml comment create  report.md
+      - name: Train model
+        run: |
+          python model_training.py
 
+      - name: Evaluate model
+        run: |
+          python model_evaluation.py
 
-    
-  
+      - name: Serve model
+        run: |
+          start /B python model_serving.py
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+
+      - name: Wait for server to start
+        run: |
+          timeout /t 10
+
+      - name: Test served model
+        run: |
+          curl -X POST "http://127.0.0.1:9000/predict" ^
+          -H "Content-Type: application/json" ^
+          -d "{\\"features\\": [13.2, 2.77, 2.51, 18.5, 103.0, 1.15, 2.61, 0.26, 1.46, 3.0, 1.05, 3.33, 820.0]}"
+
+    #   - name: Deploy model
+    #     run: |
+    #       echo "Triggering deployment of the model..."
+    #       # You can add the script or commands to deploy your model here
+
+      - name: Archive artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: model-artifacts
+          path: '**.pkl'
+
+      - name: Finish
+        run: echo "Pipeline execution complete."
