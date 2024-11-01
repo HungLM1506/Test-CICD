@@ -85,40 +85,35 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@v2
 
-      - name: Build Docker Image
+      - name: Set up Docker
         run: |
-          docker build -t ml_project .
+          docker compose build
 
-      - name: Load and Preprocess Data
+      - name: Train model
         run: |
-          docker run --rm ml_project python data_loading.py
+          docker compose run --rm train
 
-      - name: Train Model
+      - name: Evaluate model
         run: |
-          docker run --rm ml_project python model_training.py
+          docker compose run --rm evaluation
 
-      - name: Evaluate Model
+      - name: Start serve model
         run: |
-          docker run --rm ml_project python model_evaluation.py
+          docker compose up -d serve
 
-      - name: Serve Model
+      - name: Wait for server to start
         run: |
-          docker run -d --name ml_serve -p 9000:9000 ml_project
-        env:
-          PYTHONPATH: ${{ github.workspace }}
+          sleep 10
 
-      - name: Wait for Server to Start
-        run: sleep 10
-
-      - name: Test Served Model
+      - name: Test served model
         run: |
           curl -X POST "http://127.0.0.1:9000/predict" \
           -H "Content-Type: application/json" \
-          -d "{\"features\": [13.2, 2.77, 2.51, 18.5, 103.0, 1.15, 2.61, 0.26, 1.46, 3.0, 1.05, 3.33, 820.0]}"
+          -d "{\\"features\\": [13.2, 2.77, 2.51, 18.5, 103.0, 1.15, 2.61, 0.26, 1.46, 3.0, 1.05, 3.33, 820.0]}"
 
-      - name: Tear Down Serving Container
-        if: always()
-        run: docker stop ml_serve
+    #   - name: Stop and remove services
+    #     run: |
+    #       docker compose down
 
       - name: Finish
         run: echo "Pipeline execution complete."
