@@ -39,7 +39,7 @@ jobs:
 
       - name: Serve model
         run: |
-          start /B python model_serving.py
+          Start-Process python -ArgumentList "model_serving.py"
         env:
           PYTHONPATH: ${{ github.workspace }}
 
